@@ -1,5 +1,6 @@
 #java
 *.class
 *.jar
+*.~
 out
 hw1-check-dist

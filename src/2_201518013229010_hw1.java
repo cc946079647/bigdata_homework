@@ -95,7 +95,7 @@ class Hw1Grp2{
      *</p>
      * @param content   file contents read from file
      * @param groupCol  group by index,must be R[0-9}*
-     * @param outputOperation   operation string descriptors,each one must be (count|max[1-9][0-9]*|avg[1-9][0-9]*)
+     * @param outputOperation   operation string descriptors,each one must be (count|max[0-9]*|avg[0-9]*)
      * @throws IllegalArgumentException invalid parameter
      * @throws IllegalStateException    invalid state between maxData and maxDataString
      */
@@ -169,11 +169,11 @@ class Hw1Grp2{
         //the format of average
         DecimalFormat floatFormat = new DecimalFormat("#.00");
         if(avgOp){
-            avgData = new Hashtable<>(avgColumns.size());
+            avgData = new Hashtable<>();
         }
         if(maxOp){
-            maxData = new Hashtable<>(maxColumns.size());
-            maxDataString = new Hashtable<>(maxColumns.size());
+            maxData = new Hashtable<>();
+            maxDataString = new Hashtable<>();
         }
         for(String record:content) {
            String[]attrs = record.split(columnSplitStr);
@@ -263,11 +263,12 @@ class Hw1Grp2{
                     double avg = sum.get(i) / count;
                     sum.set(i, avg);
                 }
+                avgData.put(key,sum);
             }
         }
         //make result
         try {
-            if(avgOp||maxOp||countOp)
+            if(avgOp||maxOp||countOp&&!htable.isEmpty())
                 createTable();
             Iterator ite = htable.entrySet().iterator();
             while (ite.hasNext()) {
@@ -306,9 +307,9 @@ class Hw1Grp2{
 
     }
     //configuration used in hbase operations
-    static Configuration conf;
+    static Configuration conf =null;
     //htable used in operations
-    static HTable htable;
+    static HTable resTable =null;
     //the table name
     static String tableName="Result";
     //the column family name
@@ -353,13 +354,13 @@ class Hw1Grp2{
     public static void putHbase(String rowkey,String column,String value)throws IOException{
         if(conf == null)
             conf=new Configuration();
-        if(htable == null)
-            htable = new HTable(conf,tableName);
+        if(resTable == null)
+            resTable = new HTable(conf,tableName);
         //row key
         Put put = new Put(rowkey.getBytes());
         //column family,column,value
         put.add(columnFamily.getBytes(),column.getBytes(),value.getBytes());
-        htable.put(put);
+        resTable.put(put);
     }
 
     /**
@@ -369,8 +370,8 @@ class Hw1Grp2{
      * @throws IOException thrown when failed to close habase table
      */
     public static void closeHtable()throws IOException{
-        if(htable!=null)
-            htable.close();
+        if(resTable!=null)
+            resTable.close();
     }
 
 }
